@@ -36,8 +36,7 @@ jobs:
       run: |
         Copy-Item -Path "public" -Destination "release\" -Recurse -Force
         if (Test-Path "README.md") { Copy-Item "README.md" "release\" }
-        if (Test-Path "使用说明.md") { Copy-Item "使用说明.md" "release\" -Force }
-        if (Test-Path "启动.bat") { Copy-Item "启动.bat" "release\" }
+        if (Test-Path "start.bat") { Copy-Item "start.bat" "release\" }
       shell: powershell
       
     - name: 创建压缩包
