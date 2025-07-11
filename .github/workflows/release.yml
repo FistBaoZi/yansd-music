@@ -2,8 +2,8 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'  # 当推送以v开头的标签时触发，如v1.0
+    branches:
+      - main  # 当推送到main分支时触发
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
         cache: 'npm'
         
     - name: 安装依赖
-      run: npm ci
+      run: npm install  # 使用 npm install 替代 npm ci 来解决依赖同步问题
       
     - name: 安装 pkg
       run: npm install -g pkg
@@ -46,21 +46,41 @@ jobs:
         7z a -tzip ../yansd-music-win-x64.zip . -mx9
       shell: cmd
       
-    - name: 获取标签名称
-      id: get_tag
-      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      shell: bash
+    - name: 检查标签是否存在
+      id: check_tag
+      run: |
+        if (git tag -l "v1.0") {
+          echo "TAG_EXISTS=true" >> $env:GITHUB_OUTPUT
+        } else {
+          echo "TAG_EXISTS=false" >> $env:GITHUB_OUTPUT
+        }
+      shell: powershell
       
+    - name: 创建标签
+      if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag v1.0
+        git push origin v1.0
+      
+    - name: 删除现有Release (如果存在)
+      continue-on-error: true
+      run: |
+        gh release delete v1.0 --yes
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
     - name: 创建 Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
-        release_name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+        tag_name: v1.0
+        release_name: Release v1.0
         body: |
-          ## 🎵 音乐下载器 ${{ steps.get_tag.outputs.TAG_NAME }}
+          ## 🎵 音乐下载器 v1.0
           
           ### 📦 下载说明
           - 下载 `yansd-music-win-x64.zip` 
@@ -78,6 +98,10 @@ jobs:
           - Node.js 版本: 18
           - 平台: Windows x64
           - 打包工具: pkg
+          
+          ### 📅 构建信息
+          - 构建时间: ${{ github.event.head_commit.timestamp }}
+          - 提交SHA: ${{ github.sha }}
         draft: false
         prerelease: false
         
