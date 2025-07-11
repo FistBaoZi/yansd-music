@@ -79,6 +79,47 @@
         </div>
     </div>
 
+    <!-- 音频播放器组件 -->
+    <div class="audio-player" id="audioPlayer" style="display: none;">
+        <div class="player-content">
+            <div class="song-info">
+                <div class="song-cover">
+                    <img id="playerSongCover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E" alt="专辑封面">
+                </div>
+                <div class="song-details">
+                    <div class="song-title" id="playerSongTitle">选择一首歌曲开始播放</div>
+                    <div class="song-artist" id="playerSongArtist"></div>
+                </div>
+            </div>
+            
+            <div class="player-controls">
+                <button id="prevBtn" class="control-btn" title="上一首">⏮</button>
+                <button id="playPauseBtn" class="control-btn play-pause" title="播放/暂停">▶</button>
+                <button id="nextBtn" class="control-btn" title="下一首">⏭</button>
+            </div>
+            
+            <div class="player-progress">
+                <span id="currentTime">0:00</span>
+                <div class="progress-container">
+                    <div class="progress-track" id="progressTrack">
+                        <div class="progress-fill" id="progressFill"></div>
+                        <div class="progress-handle" id="progressHandle"></div>
+                    </div>
+                </div>
+                <span id="totalTime">0:00</span>
+            </div>
+            
+            <div class="player-volume">
+                <button id="muteBtn" class="control-btn" title="静音">🔊</button>
+                <div class="volume-container">
+                    <input type="range" id="volumeSlider" min="0" max="100" value="50" class="volume-slider">
+                </div>
+            </div>
+        </div>
+        
+        <audio id="audioElement" preload="metadata"></audio>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

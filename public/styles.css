@@ -172,6 +172,7 @@ header p {
     padding: 20px 25px;
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.2s ease;
+    position: relative;
 }
 
 .song-item:hover {
@@ -697,33 +698,432 @@ header p {
     opacity: 0.5;
 }
 
-/* 适配下载进度卡片位置 */
-.floating-progress-card {
-    right: 80px; /* 给弹出框留出空间 */
+/* 音频播放器样式 */
+.audio-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.player-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.player-content .song-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 0;
+}
+
+.song-cover {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.song-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.song-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.player-content .song-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-content .song-artist {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.control-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(1.1);
+}
+
+.play-pause {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 14px;
+    width: 40px;
+    height: 40px;
+}
+
+.play-pause:hover {
+    background: linear-gradient(135deg, #5a6fd8, #6a4190);
+    transform: scale(1.05);
+}
+
+.player-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-width: 300px;
+}
+
+.player-progress span {
+    font-size: 12px;
+    color: #666;
+    min-width: 35px;
+    text-align: center;
+}
+
+.progress-container {
+    flex: 1;
+    height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.progress-track {
+    width: 100%;
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s ease;
+}
+
+.progress-handle {
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    left: 0%;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    opacity: 0;
+}
+
+.progress-track:hover .progress-handle {
+    opacity: 1;
+}
+
+.player-volume {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.volume-container {
+    width: 80px;
+}
+
+.volume-slider {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e0e0e0;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* 搜索结果中的播放按钮 */
+.song-item {
+    position: relative;
+}
+
+.song-actions {
+    position: absolute;
+    top: 50%;
+    right: 120px;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.song-play-btn, .song-download-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.song-download-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.song-play-btn:hover, .song-download-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.song-download-btn:hover {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.song-play-btn.playing {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.song-play-btn.loading {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    animation: pulse 1.5s infinite;
+}
+
+.song-download-btn.downloading {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    animation: pulse 1.5s infinite;
+    cursor: not-allowed;
+}
+
+.song-download-btn.success {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.song-download-btn.error {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.song-download-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 下载通知样式 */
+.download-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.download-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.download-notification.success {
+    border-left: 4px solid #4CAF50;
+}
+
+.download-notification.error {
+    border-left: 4px solid #f44336;
+}
+
+.download-notification.info {
+    border-left: 4px solid #2196F3;
+}
+
+.notification-content {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.notification-message {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.notification-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .player-content {
+        padding: 10px 15px;
+        gap: 15px;
+    }
+    
+    .player-progress {
+        max-width: 200px;
+    }
+    
+    .volume-container {
+        width: 60px;
+    }
+    
+    .song-play-btn {
+        right: 90px;
+        width: 36px;
+        height: 36px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-content .song-info {
+        flex: none;
+        width: 120px;
+    }
+    
+    .player-progress {
+        max-width: 150px;
+    }
+    
+    .volume-container {
+        display: none;
+    }
+    
+    .song-play-btn {
+        right: 70px;
+    }
 }
 
 @media (max-width: 768px) {
-    .input-group {
-        flex-direction: column;
+    .song-actions {
+        right: 90px;
+        gap: 6px;
     }
     
-    .results-header {
-        flex-direction: column;
-        gap: 15px;
+    .song-play-btn, .song-download-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 11px;
     }
     
-    .batch-actions {
-        width: 100%;
-        justify-content: center;
+    .download-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .song-actions {
+        right: 70px;
+        gap: 4px;
     }
     
-    .download-header {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .progress-info {
-        width: 100%;
-        justify-content: center;
+    .song-play-btn, .song-download-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
     }
 }

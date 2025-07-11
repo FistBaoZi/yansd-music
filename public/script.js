@@ -8,6 +8,9 @@ class MusicDownloader {
         this.initializeElements();
         this.bindEvents();
         this.loadDownloadedFiles();
+        
+        // 初始化音频播放器
+        this.audioPlayer = new AudioPlayer(this);
     }
     
     initializeElements() {
@@ -104,6 +107,10 @@ class MusicDownloader {
                     <div class="song-artist">歌手: ${this.escapeHtml(song.artist.join(', '))}</div>
                     <div class="song-album">专辑: ${this.escapeHtml(song.album || '未知专辑')}</div>
                 </div>
+                <div class="song-actions">
+                    <button class="song-play-btn" data-index="${index}" title="播放">▶</button>
+                    <button class="song-download-btn" data-index="${index}" title="下载">⬇</button>
+                </div>
                 <div class="song-source">${this.getSourceName(song.source)}</div>
             </div>
         `).join('');
@@ -118,6 +125,22 @@ class MusicDownloader {
                     this.selectedSongs.delete(index);
                 }
                 this.updateSelectedCount();
+            });
+        });
+        
+        // 绑定播放按钮事件
+        this.searchResultsElement.querySelectorAll('.song-play-btn').forEach(playBtn => {
+            playBtn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.audioPlayer.playSong(songs[index], index);
+            });
+        });
+        
+        // 绑定下载按钮事件
+        this.searchResultsElement.querySelectorAll('.song-download-btn').forEach(downloadBtn => {
+            downloadBtn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.downloadSingleSong(songs[index], index);
             });
         });
     }
@@ -143,6 +166,132 @@ class MusicDownloader {
         this.downloadSelectedBtn.disabled = this.selectedSongs.size === 0 || this.isDownloading;
     }
     
+    async downloadSingleSong(song, index) {
+        const downloadBtn = document.querySelector(`.song-download-btn[data-index="${index}"]`);
+        
+        if (!downloadBtn) return;
+        
+        // 检查是否已在下载
+        if (downloadBtn.classList.contains('downloading')) {
+            return;
+        }
+        
+        // 设置下载状态
+        downloadBtn.classList.add('downloading');
+        downloadBtn.innerHTML = '⏳';
+        downloadBtn.title = '下载中...';
+        downloadBtn.disabled = true;
+        
+        try {
+            console.log(`开始下载单个歌曲: ${song.name} - ${song.artist.join(', ')}`);
+            
+            const response = await fetch('/api/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ songs: [song] })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.results && data.results.length > 0) {
+                const result = data.results[0];
+                
+                // 检查下载结果
+                if (result.music.success || result.lyric.success) {
+                    // 至少有一个成功
+                    downloadBtn.classList.remove('downloading');
+                    downloadBtn.classList.add('success');
+                    downloadBtn.innerHTML = '✅';
+                    downloadBtn.title = `下载完成 - 音乐:${result.music.success ? '成功' : '失败'} 歌词:${result.lyric.success ? '成功' : '失败'}`;
+                    
+                    // 显示成功消息
+                    this.showDownloadNotification(`${song.name} 下载完成`, 'success');
+                    
+                    // 刷新已下载文件列表
+                    this.loadDownloadedFiles();
+                    
+                } else {
+                    // 都失败了
+                    throw new Error('下载失败');
+                }
+                
+                // 3秒后恢复按钮状态
+                setTimeout(() => {
+                    downloadBtn.classList.remove('success');
+                    downloadBtn.innerHTML = '⬇';
+                    downloadBtn.title = '下载';
+                    downloadBtn.disabled = false;
+                }, 3000);
+                
+            } else {
+                throw new Error(data.error || '下载失败');
+            }
+            
+        } catch (error) {
+            console.error('单个歌曲下载失败:', error);
+            
+            // 设置错误状态
+            downloadBtn.classList.remove('downloading');
+            downloadBtn.classList.add('error');
+            downloadBtn.innerHTML = '❌';
+            downloadBtn.title = `下载失败: ${error.message}`;
+            
+            // 显示错误消息
+            this.showDownloadNotification(`${song.name} 下载失败: ${error.message}`, 'error');
+            
+            // 3秒后恢复按钮状态
+            setTimeout(() => {
+                downloadBtn.classList.remove('error');
+                downloadBtn.innerHTML = '⬇';
+                downloadBtn.title = '下载';
+                downloadBtn.disabled = false;
+            }, 3000);
+        }
+    }
+    
+    showDownloadNotification(message, type = 'info') {
+        // 创建通知元素
+        const notification = document.createElement('div');
+        notification.className = `download-notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span class="notification-message">${message}</span>
+                <button class="notification-close">✕</button>
+            </div>
+        `;
+        
+        // 添加到页面
+        document.body.appendChild(notification);
+        
+        // 显示动画
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // 绑定关闭事件
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
+            this.hideNotification(notification);
+        });
+        
+        // 3秒后自动隐藏
+        setTimeout(() => {
+            this.hideNotification(notification);
+        }, 3000);
+    }
+    
+    hideNotification(notification) {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }
+
     async downloadSelected() {
         if (this.selectedSongs.size === 0) {
             alert('请先选择要下载的歌曲');
@@ -531,7 +680,365 @@ class MusicDownloader {
     }
 }
 
-// 初始化应用
+// 音频播放器类
+class AudioPlayer {
+    constructor(musicDownloader) {
+        this.musicDownloader = musicDownloader;
+        this.currentSong = null;
+        this.currentSongIndex = -1;
+        this.playlist = [];
+        this.isPlaying = false;
+        this.currentTime = 0;
+        this.duration = 0;
+        this.volume = 0.5;
+        this.isMuted = false;
+        
+        this.initializeElements();
+        this.bindEvents();
+    }
+    
+    initializeElements() {
+        this.playerElement = document.getElementById('audioPlayer');
+        this.audioElement = document.getElementById('audioElement');
+        this.songCover = document.getElementById('playerSongCover');
+        this.songTitle = document.getElementById('playerSongTitle');
+        this.songArtist = document.getElementById('playerSongArtist');
+        this.playPauseBtn = document.getElementById('playPauseBtn');
+        this.prevBtn = document.getElementById('prevBtn');
+        this.nextBtn = document.getElementById('nextBtn');
+        this.currentTimeEl = document.getElementById('currentTime');
+        this.totalTimeEl = document.getElementById('totalTime');
+        this.progressTrack = document.getElementById('progressTrack');
+        this.progressFill = document.getElementById('progressFill');
+        this.progressHandle = document.getElementById('progressHandle');
+        this.volumeSlider = document.getElementById('volumeSlider');
+        this.muteBtn = document.getElementById('muteBtn');
+    }
+    
+    bindEvents() {
+        // 播放控制按钮事件
+        this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+        this.prevBtn.addEventListener('click', () => this.previousSong());
+        this.nextBtn.addEventListener('click', () => this.nextSong());
+        
+        // 音频事件
+        this.audioElement.addEventListener('loadstart', () => this.onLoadStart());
+        this.audioElement.addEventListener('loadedmetadata', () => this.onLoadedMetadata());
+        this.audioElement.addEventListener('timeupdate', () => this.onTimeUpdate());
+        this.audioElement.addEventListener('ended', () => this.onEnded());
+        this.audioElement.addEventListener('error', (e) => this.onError(e));
+        this.audioElement.addEventListener('play', () => this.onPlay());
+        this.audioElement.addEventListener('pause', () => this.onPause());
+        
+        // 进度条事件
+        this.progressTrack.addEventListener('click', (e) => this.seekTo(e));
+        
+        // 音量控制事件
+        this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value / 100));
+        this.muteBtn.addEventListener('click', () => this.toggleMute());
+        
+        // 设置初始音量
+        this.audioElement.volume = this.volume;
+        this.volumeSlider.value = this.volume * 100;
+        
+        // 键盘快捷键支持
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+    }
+    
+    handleKeyboardShortcuts(e) {
+        // 只在播放器显示时响应快捷键
+        if (this.playerElement.style.display === 'none') return;
+        
+        // 防止在输入框中触发快捷键
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        switch (e.key) {
+            case ' ': // 空格键：播放/暂停
+                e.preventDefault();
+                this.togglePlayPause();
+                break;
+            case 'ArrowLeft': // 左箭头：后退10秒
+                e.preventDefault();
+                this.audioElement.currentTime = Math.max(0, this.audioElement.currentTime - 10);
+                break;
+            case 'ArrowRight': // 右箭头：前进10秒
+                e.preventDefault();
+                this.audioElement.currentTime = Math.min(this.duration, this.audioElement.currentTime + 10);
+                break;
+            case 'ArrowUp': // 上箭头：增加音量
+                e.preventDefault();
+                this.setVolume(Math.min(1, this.volume + 0.1));
+                this.volumeSlider.value = this.volume * 100;
+                break;
+            case 'ArrowDown': // 下箭头：减少音量
+                e.preventDefault();
+                this.setVolume(Math.max(0, this.volume - 0.1));
+                this.volumeSlider.value = this.volume * 100;
+                break;
+            case 'n': // N键：下一首
+                e.preventDefault();
+                this.nextSong();
+                break;
+            case 'p': // P键：上一首
+                e.preventDefault();
+                this.previousSong();
+                break;
+            case 'm': // M键：静音
+                e.preventDefault();
+                this.toggleMute();
+                break;
+        }
+    }
+    
+    async playSong(song, index) {
+        try {
+            // 更新当前播放按钮状态
+            this.updatePlayButtons(-1); // 清除所有播放状态
+            
+            // 设置加载状态
+            const playBtn = document.querySelector(`[data-index="${index}"]`);
+            if (playBtn) {
+                playBtn.classList.add('loading');
+                playBtn.innerHTML = '⏳';
+            }
+            
+            this.currentSong = song;
+            this.currentSongIndex = index;
+            this.playlist = this.musicDownloader.searchResultsData;
+            
+            // 更新播放器信息
+            this.updatePlayerInfo();
+            this.showPlayer();
+            
+            // 获取音频URL
+            const audioUrl = await this.getAudioUrl(song);
+            if (audioUrl) {
+                this.audioElement.src = audioUrl;
+                await this.audioElement.load();
+                await this.audioElement.play();
+            } else {
+                throw new Error('无法获取音频链接');
+            }
+            
+        } catch (error) {
+            console.error('播放失败:', error);
+            this.onError(error);
+        }
+    }
+    
+    async getAudioUrl(song) {
+        try {
+            // 首先尝试使用流式播放接口
+            if (song.url_id) {
+                const streamUrl = `/api/stream/${song.source}/${song.url_id}?br=128`;
+                
+                // 测试流式链接是否可用
+                try {
+                    const testResponse = await fetch(streamUrl, { method: 'HEAD' });
+                    if (testResponse.ok) {
+                        return streamUrl;
+                    }
+                } catch (e) {
+                    console.log('流式播放不可用，尝试获取直接链接');
+                }
+            }
+            
+            // 尝试从服务器获取直接音频URL
+            const response = await fetch(`/api/play?name=${encodeURIComponent(song.name)}&artist=${encodeURIComponent(song.artist.join(', '))}&source=${song.source}&id=${song.url_id || ''}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.url) {
+                    return data.url;
+                }
+            }
+            
+            // 如果服务器没有提供播放接口，使用预览URL（如果有的话）
+            if (song.preview_url) {
+                return song.preview_url;
+            }
+            
+            // 最后返回null表示无法播放
+            return null;
+            
+        } catch (error) {
+            console.error('获取音频URL失败:', error);
+            return null;
+        }
+    }
+    
+    updatePlayerInfo() {
+        if (this.currentSong) {
+            this.songTitle.textContent = this.currentSong.name;
+            this.songArtist.textContent = this.currentSong.artist.join(', ');
+            
+            // 如果有专辑封面URL，可以在这里设置
+            // this.songCover.src = this.currentSong.albumArt || 'default-cover.jpg';
+        }
+    }
+    
+    showPlayer() {
+        this.playerElement.style.display = 'block';
+        // 为页面底部添加内边距，避免内容被播放器遮挡
+        document.body.style.paddingBottom = '80px';
+    }
+    
+    hidePlayer() {
+        this.playerElement.style.display = 'none';
+        document.body.style.paddingBottom = '0';
+    }
+    
+    togglePlayPause() {
+        if (this.isPlaying) {
+            this.audioElement.pause();
+        } else {
+            this.audioElement.play();
+        }
+    }
+    
+    previousSong() {
+        if (this.currentSongIndex > 0) {
+            this.playSong(this.playlist[this.currentSongIndex - 1], this.currentSongIndex - 1);
+        }
+    }
+    
+    nextSong() {
+        if (this.currentSongIndex < this.playlist.length - 1) {
+            this.playSong(this.playlist[this.currentSongIndex + 1], this.currentSongIndex + 1);
+        }
+    }
+    
+    seekTo(e) {
+        const rect = this.progressTrack.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const seekTime = percent * this.duration;
+        this.audioElement.currentTime = seekTime;
+    }
+    
+    setVolume(volume) {
+        this.volume = volume;
+        this.audioElement.volume = volume;
+        this.updateVolumeButton();
+    }
+    
+    toggleMute() {
+        if (this.isMuted) {
+            this.audioElement.volume = this.volume;
+            this.isMuted = false;
+        } else {
+            this.audioElement.volume = 0;
+            this.isMuted = true;
+        }
+        this.updateVolumeButton();
+    }
+    
+    updateVolumeButton() {
+        if (this.isMuted || this.audioElement.volume === 0) {
+            this.muteBtn.innerHTML = '🔇';
+        } else if (this.audioElement.volume < 0.5) {
+            this.muteBtn.innerHTML = '🔉';
+        } else {
+            this.muteBtn.innerHTML = '🔊';
+        }
+    }
+    
+    updatePlayButtons(currentIndex) {
+        // 重置所有播放按钮
+        document.querySelectorAll('.song-play-btn').forEach((btn, index) => {
+            btn.classList.remove('playing', 'loading');
+            btn.innerHTML = '▶';
+            
+            if (index === currentIndex && this.isPlaying) {
+                btn.classList.add('playing');
+                btn.innerHTML = '⏸';
+            }
+        });
+    }
+    
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // 音频事件处理
+    onLoadStart() {
+        console.log('开始加载音频');
+    }
+    
+    onLoadedMetadata() {
+        this.duration = this.audioElement.duration;
+        this.totalTimeEl.textContent = this.formatTime(this.duration);
+        
+        // 移除加载状态
+        const playBtn = document.querySelector(`[data-index="${this.currentSongIndex}"]`);
+        if (playBtn) {
+            playBtn.classList.remove('loading');
+        }
+    }
+    
+    onTimeUpdate() {
+        this.currentTime = this.audioElement.currentTime;
+        this.currentTimeEl.textContent = this.formatTime(this.currentTime);
+        
+        // 更新进度条
+        if (this.duration > 0) {
+            const percent = (this.currentTime / this.duration) * 100;
+            this.progressFill.style.width = `${percent}%`;
+            this.progressHandle.style.left = `${percent}%`;
+        }
+    }
+    
+    onEnded() {
+        // 自动播放下一首
+        this.nextSong();
+    }
+    
+    onError(error) {
+        console.error('音频播放错误:', error);
+        
+        // 移除加载状态，显示错误
+        const playBtn = document.querySelector(`[data-index="${this.currentSongIndex}"]`);
+        if (playBtn) {
+            playBtn.classList.remove('loading', 'playing');
+            playBtn.innerHTML = '❌';
+            playBtn.title = '播放失败，可能是音频链接无效';
+            
+            // 3秒后恢复播放按钮
+            setTimeout(() => {
+                playBtn.innerHTML = '▶';
+                playBtn.title = '播放';
+            }, 3000);
+        }
+        
+        // 更新播放器状态
+        this.songTitle.textContent = '播放失败';
+        this.songArtist.textContent = '无法获取音频链接';
+        
+        // 如果是当前歌曲播放失败，尝试播放下一首
+        if (this.currentSong && this.playlist.length > 1) {
+            setTimeout(() => {
+                if (this.currentSongIndex < this.playlist.length - 1) {
+                    console.log('尝试播放下一首歌曲...');
+                    this.nextSong();
+                }
+            }, 2000);
+        }
+    }
+    
+    onPlay() {
+        this.isPlaying = true;
+        this.playPauseBtn.innerHTML = '⏸';
+        this.updatePlayButtons(this.currentSongIndex);
+    }
+    
+    onPause() {
+        this.isPlaying = false;
+        this.playPauseBtn.innerHTML = '▶';
+        this.updatePlayButtons(-1);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     new MusicDownloader();
 });

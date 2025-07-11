@@ -183,6 +183,107 @@ app.post('/api/download', async (req, res) => {
     }
 });
 
+// 获取音频播放链接API
+app.get('/api/play', async (req, res) => {
+    try {
+        const { name, artist, source = 'netease', id } = req.query;
+        
+        if (!name && !id) {
+            return res.status(400).json({ error: '请提供歌曲名称或ID' });
+        }
+        
+        let songId = id;
+        
+        // 如果没有提供ID，先搜索获取ID
+        if (!songId && name) {
+            try {
+                const searchUrl = `https://music-api.gdstudio.xyz/api.php?types=search&source=${source}&name=${encodeURIComponent(name)}&count=1`;
+                const searchResponse = await axios.get(searchUrl);
+                
+                if (searchResponse.data && searchResponse.data.length > 0) {
+                    songId = searchResponse.data[0].url_id;
+                } else {
+                    return res.status(404).json({ error: '未找到歌曲' });
+                }
+            } catch (searchError) {
+                console.error('搜索歌曲失败:', searchError.message);
+                return res.status(500).json({ error: '搜索歌曲失败' });
+            }
+        }
+        
+        // 获取音频链接
+        const url = `https://music-api.gdstudio.xyz/api.php?types=url&source=${source}&id=${songId}&br=128`;
+        const response = await axios.get(url);
+        
+        if (response.data && response.data.url) {
+            res.json({ 
+                success: true, 
+                url: response.data.url,
+                source: source,
+                id: songId
+            });
+        } else {
+            res.status(404).json({ error: '获取音频链接失败' });
+        }
+        
+    } catch (error) {
+        console.error('获取播放链接失败:', error.message);
+        res.status(500).json({ error: '获取播放链接失败: ' + error.message });
+    }
+});
+
+// 流式播放音频 (代理播放)
+app.get('/api/stream/:source/:id', async (req, res) => {
+    try {
+        const { source, id } = req.params;
+        const { br = '128' } = req.query;
+        
+        // 获取音频链接
+        const url = `https://music-api.gdstudio.xyz/api.php?types=url&source=${source}&id=${id}&br=${br}`;
+        const response = await axios.get(url);
+        
+        if (response.data && response.data.url) {
+            const audioUrl = response.data.url;
+            
+            // 代理音频流
+            const audioResponse = await axios.get(audioUrl, { 
+                responseType: 'stream',
+                headers: {
+                    'Range': req.headers.range || '',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            });
+            
+            // 设置响应头
+            res.set({
+                'Content-Type': 'audio/mpeg',
+                'Accept-Ranges': 'bytes',
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'public, max-age=3600'
+            });
+            
+            // 如果是范围请求，设置相应的状态码和头部
+            if (req.headers.range && audioResponse.headers['content-range']) {
+                res.status(206);
+                res.set('Content-Range', audioResponse.headers['content-range']);
+                res.set('Content-Length', audioResponse.headers['content-length']);
+            }
+            
+            // 管道传输音频流
+            audioResponse.data.pipe(res);
+            
+        } else {
+            res.status(404).json({ error: '音频文件不存在' });
+        }
+        
+    } catch (error) {
+        console.error('流式播放失败:', error.message);
+        if (!res.headersSent) {
+            res.status(500).json({ error: '流式播放失败: ' + error.message });
+        }
+    }
+});
+
 // 获取下载列表
 app.get('/api/downloads', (req, res) => {
     try {
