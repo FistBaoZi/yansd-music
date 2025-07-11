@@ -8,26 +8,36 @@ const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
+// 确定基础路径，兼容开发环境和 pkg 打包环境
+const isPkg = typeof process.pkg !== 'undefined';
+const basePath = isPkg ? path.dirname(process.execPath) : __dirname;
+console.log(`当前基础路径: ${basePath}`);
+
 // 中间件
 app.use(cors());
 app.use(express.json());
 
 // 静态文件服务 - 支持打包后的路径
-const publicPath = path.join(__dirname, 'public');
-const distPublicPath = path.join(process.cwd(), 'public');
+const publicPath = path.join(basePath, 'public');
 
 if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
-    console.log('使用开发环境静态文件路径:', publicPath);
-} else if (fs.existsSync(distPublicPath)) {
-    app.use(express.static(distPublicPath));
-    console.log('使用打包环境静态文件路径:', distPublicPath);
+    console.log('静态文件服务已启动，路径:', publicPath);
 } else {
-    console.log('未找到静态文件目录，请确保public文件夹存在');
+    console.error('错误: 未找到静态文件目录 (public)，请确保它与可执行文件在同一目录下。');
+    console.error('预期路径:', publicPath);
+    // 在打包模式下，如果找不到关键目录，暂停让用户看到错误信息
+    if (isPkg) {
+        console.log('按 Enter 键退出...');
+        process.stdin.resume();
+        process.stdin.on('data', process.exit.bind(process, 1));
+    } else {
+        process.exit(1);
+    }
 }
 
 // 创建下载目录
-const downloadDir = path.join(__dirname, 'downloads');
+const downloadDir = path.join(basePath, 'downloads');
 if (!fs.existsSync(downloadDir)) {
     fs.mkdirSync(downloadDir, { recursive: true });
 }
