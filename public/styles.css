@@ -1,0 +1,729 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 2.5em;
+    color: white;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+header p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1em;
+}
+
+.search-section {
+    margin-bottom: 30px;
+}
+
+.search-form {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.input-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 15px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+#sourceSelect {
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    background: white;
+    min-width: 150px;
+}
+
+#searchBtn {
+    padding: 15px 25px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#searchBtn:hover {
+    transform: translateY(-2px);
+}
+
+.downloads-toggle-btn {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    white-space: nowrap;
+}
+
+.downloads-toggle-btn:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+}
+
+.results-section {
+    margin-bottom: 30px;
+}
+
+.results-header {
+    background: white;
+    border-radius: 15px 15px 0 0;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.results-header h2 {
+    color: #333;
+    font-size: 1.5em;
+}
+
+.batch-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.batch-actions button {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.batch-actions button:hover {
+    background: #f5f5f5;
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.download-btn:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40) !important;
+}
+
+.results-grid {
+    background: white;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.song-item {
+    display: flex;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.song-item:hover {
+    background-color: #f9f9f9;
+}
+
+.song-item:last-child {
+    border-bottom: none;
+}
+
+.song-checkbox {
+    margin-right: 15px;
+    transform: scale(1.2);
+}
+
+.song-info {
+    flex: 1;
+}
+
+.song-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.song-artist {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 3px;
+}
+
+.song-album {
+    color: #999;
+    font-size: 0.8em;
+}
+
+.song-source {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.download-section {
+    margin-bottom: 30px;
+}
+
+.download-header {
+    background: white;
+    border-radius: 15px 15px 0 0;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.download-header h2 {
+    color: #333;
+    font-size: 1.5em;
+}
+
+.progress-info {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+#clearHistoryBtn {
+    padding: 8px 15px;
+    border: 1px solid #ff6b6b;
+    border-radius: 8px;
+    background: white;
+    color: #ff6b6b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#clearHistoryBtn:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+.download-status {
+    background: white;
+    border-radius: 0 0 15px 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+    padding: 20px 25px 0;
+}
+
+.progress-bar-container {
+    margin-bottom: 20px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    height: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    z-index: 2;
+}
+
+.download-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.download-item {
+    padding: 15px 25px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.download-item:last-child {
+    border-bottom: none;
+}
+
+.download-info {
+    flex: 1;
+}
+
+.download-name {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.download-details {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.download-result {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.success {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.downloading {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+/* 悬浮下载进度卡片 */
+.floating-progress-card {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 350px;
+    max-height: 80vh;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-50%) translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.floating-progress-card.show {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+.floating-card-header {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+.floating-card-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.floating-card-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.floating-card-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.floating-card-body {
+    padding: 20px;
+    max-height: calc(80vh - 80px);
+    overflow-y: auto;
+}
+
+.floating-progress-bar-container {
+    margin-bottom: 15px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    height: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.floating-progress-bar {
+    height: 100%;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-radius: 8px;
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.floating-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    color: #333;
+    font-size: 12px;
+    z-index: 2;
+}
+
+.floating-current-song {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.floating-download-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.floating-download-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+
+.floating-download-item:last-child {
+    border-bottom: none;
+}
+
+.floating-download-name {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.floating-download-details {
+    color: #666;
+    font-size: 12px;
+}
+
+.floating-download-result {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.floating-download-result.success {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.floating-download-result.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.floating-download-result.downloading {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+/* 已下载文件弹出框 */
+.downloads-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    display: none;
+}
+
+.downloads-popup.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.popup-content {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: popupSlideIn 0.3s ease;
+}
+
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.popup-header {
+    padding: 25px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.popup-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.popup-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.refresh-btn, .close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.refresh-btn:hover, .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.popup-body {
+    max-height: calc(80vh - 90px);
+    overflow-y: auto;
+    padding: 0;
+}
+
+.downloaded-files-list {
+    padding: 0;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.file-item:hover {
+    background-color: #f8f9fa;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    color: #666;
+    font-size: 12px;
+}
+
+.file-type {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 15px;
+}
+
+.file-type.mp3 {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.file-type.lrc {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.empty-files {
+    text-align: center;
+    color: #666;
+    padding: 60px 30px;
+    font-size: 16px;
+}
+
+.empty-files-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+/* 适配下载进度卡片位置 */
+.floating-progress-card {
+    right: 80px; /* 给弹出框留出空间 */
+}
+
+@media (max-width: 768px) {
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .batch-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .download-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .progress-info {
+        width: 100%;
+        justify-content: center;
+    }
+}

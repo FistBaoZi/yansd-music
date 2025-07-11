@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐下载器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 音乐下载器</h1>
+            <p>搜索并下载你喜欢的音乐</p>
+        </header>
+
+        <div class="search-section">
+            <div class="search-form">
+                <div class="input-group">
+                    <input type="text" id="searchInput" placeholder="请输入歌曲名、歌手名或专辑名..." />
+                    <select id="sourceSelect">
+                        <option value="netease">网易云音乐</option>
+                        <option value="tencent">腾讯音乐</option>
+                        <option value="kugou">酷狗音乐</option>
+                        <option value="kuwo">酷我音乐</option>
+                        <option value="migu">咪咕音乐</option>
+                        <option value="apple">Apple Music</option>
+                        <option value="spotify">Spotify</option>
+                        <option value="ytmusic">YouTube Music</option>
+                    </select>
+                    <button id="searchBtn">🔍 搜索</button>
+                    <button id="toggleDownloadsBtn" class="downloads-toggle-btn">📁 已下载</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header" style="display: none;">
+                <h2>搜索结果</h2>
+                <div class="batch-actions">
+                    <button id="selectAllBtn">全选</button>
+                    <button id="deselectAllBtn">取消全选</button>
+                    <button id="downloadSelectedBtn" class="download-btn">下载选中 (<span id="selectedCount">0</span>)</button>
+                </div>
+            </div>
+            
+            <div id="searchResults" class="results-grid"></div>
+            <div id="loadingIndicator" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>搜索中...</p>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <div class="download-header" style="display: none;">
+                <h2>下载进度</h2>
+                <div class="progress-info">
+                    <span id="downloadProgress">准备中...</span>
+                    <button id="clearHistoryBtn">清空历史</button>
+                </div>
+            </div>
+            <div id="downloadStatus" class="download-status"></div>
+        </div>
+    </div>
+
+    <!-- 右侧已下载文件弹出卡片 -->
+    <div class="downloads-popup" id="downloadsPopup">
+        <div class="popup-overlay" id="popupOverlay"></div>
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3>📁 已下载文件</h3>
+                <div class="popup-actions">
+                    <button id="refreshDownloadsBtn" class="refresh-btn">🔄 刷新</button>
+                    <button id="closePopupBtn" class="close-btn">✕</button>
+                </div>
+            </div>
+            <div class="popup-body">
+                <div id="downloadedFiles" class="downloaded-files-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
