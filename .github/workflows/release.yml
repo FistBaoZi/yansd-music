@@ -1,0 +1,92 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 当推送以v开头的标签时触发，如v1.0
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: 安装依赖
+      run: npm ci
+      
+    - name: 安装 pkg
+      run: npm install -g pkg
+      
+    - name: 创建发布目录
+      run: mkdir -p release
+      
+    - name: 打包为 Windows exe
+      run: pkg . --targets node18-win-x64 --out-path release --compress Brotli
+      
+    - name: 复制静态文件
+      run: |
+        cp -r public release/
+        if (Test-Path README.md) { cp README.md release/ }
+        if (Test-Path "使用说明.md") { cp "使用说明.md" release/ }
+        if (Test-Path "启动.bat") { cp "启动.bat" release/ }
+      shell: powershell
+      
+    - name: 创建压缩包
+      run: |
+        cd release
+        7z a -tzip ../yansd-music-win-x64.zip . -mx9
+      shell: cmd
+      
+    - name: 获取标签名称
+      id: get_tag
+      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      shell: bash
+      
+    - name: 创建 Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+        release_name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+        body: |
+          ## 🎵 音乐下载器 ${{ steps.get_tag.outputs.TAG_NAME }}
+          
+          ### 📦 下载说明
+          - 下载 `yansd-music-win-x64.zip` 
+          - 解压到任意目录
+          - 双击运行 `music-downloader.exe`
+          - 浏览器访问 `http://localhost:3000`
+          
+          ### ✨ 功能特性
+          - 🔍 音乐搜索
+          - ⬇️ 批量下载音乐和歌词
+          - 🎵 在线播放
+          - 📁 下载管理
+          
+          ### 🔧 技术信息
+          - Node.js 版本: 18
+          - 平台: Windows x64
+          - 打包工具: pkg
+        draft: false
+        prerelease: false
+        
+    - name: 上传发布资源
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yansd-music-win-x64.zip
+        asset_name: yansd-music-win-x64.zip
+        asset_content_type: application/zip
