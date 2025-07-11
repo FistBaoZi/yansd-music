@@ -6,6 +6,9 @@ on:
       - main  # 当推送到main分支时触发
   workflow_dispatch:  # 允许手动触发
 
+permissions:
+  contents: write  # 需要写入权限来创建 release 和推送标签
+
 jobs:
   build-and-release:
     runs-on: windows-latest
@@ -13,6 +16,8 @@ jobs:
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整的git历史
       
     - name: 设置 Node.js
       uses: actions/setup-node@v4
@@ -27,7 +32,8 @@ jobs:
       run: npm install -g pkg
       
     - name: 创建发布目录
-      run: mkdir -p release
+      run: New-Item -ItemType Directory -Path "release" -Force
+      shell: powershell
       
     - name: 打包为 Windows exe
       run: pkg . --targets node18-win-x64 --out-path release --compress Brotli
@@ -44,24 +50,6 @@ jobs:
         cd release
         7z a -tzip ../yansd-music-win-x64.zip . -mx9
       shell: cmd
-      
-    - name: 检查标签是否存在
-      id: check_tag
-      run: |
-        if (git tag -l "v1.0") {
-          echo "TAG_EXISTS=true" >> $env:GITHUB_OUTPUT
-        } else {
-          echo "TAG_EXISTS=false" >> $env:GITHUB_OUTPUT
-        }
-      shell: powershell
-      
-    - name: 创建标签
-      if: steps.check_tag.outputs.TAG_EXISTS == 'false'
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag v1.0
-        git push origin v1.0
       
     - name: 删除现有Release (如果存在)
       continue-on-error: true
@@ -101,6 +89,18 @@ jobs:
           ### 📅 构建信息
           - 构建时间: ${{ github.event.head_commit.timestamp }}
           - 提交SHA: ${{ github.sha }}
+        draft: false
+        prerelease: false
+        
+    - name: 上传发布资源
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yansd-music-win-x64.zip
+        asset_name: yansd-music-win-x64.zip
+        asset_content_type: application/zip
         draft: false
         prerelease: false
         
